@@ -1,0 +1,3 @@
+{"username": 12345678, "password": "mima"}
+# 将username后的 12345678 换为自己的8位账号
+# 将password后的 mima 换为自己的密码（注意双引号不要删）

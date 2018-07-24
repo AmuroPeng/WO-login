@@ -43,8 +43,9 @@ def get_captcha():
 
 
 def verify(wlanuserip, basip, captcha, JSESSIONID, route):
-    with open("config.json", 'r') as load_f:
-        load_dict = json.load(load_f)
+    with open("config.txt", 'r') as load_f:
+        line = load_f.readline()
+        load_dict = json.loads(line)
     username = load_dict['username']
     password = load_dict['password']
     url = "http://114.247.41.55/bjps/login/online.html"
