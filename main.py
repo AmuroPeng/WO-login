@@ -1,10 +1,11 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import requests
-import json
 import time
 import re
 import sys
+import os
+import json
 # 1
 from PIL import Image
 
@@ -17,29 +18,19 @@ from PIL import Image
 
 
 def get_ip():
-    print('（1/4）尝试获取ip地址...')
+    print('-----（1/4）尝试获取ip地址-----')
     url = 'http://www.msftconnecttest.com/redirect'
-
-    headers = {
-        # "Host": "www.msftconnecttest.com",
-        # "Connection": 'Connection',
-        "Upgrade-Insecure-Requests": '1',
-        # "Accept": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        # "Accept-Encoding": 'gzip, deflate',
-        # "Accept-Language": 'zh-CN,zh;q=0.9',
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A",
-    }
     try:
-        res = requests.get(url, headers=headers)
+        res = requests.get(url)
     except:
         get_error(1)
     text = res.url
-    if text.find('msn') != -1:
+    if text.find('msn') != -1:  # 检测是否跳转至msn官网（判断网络是否连接正常）
         get_error(2)
     if text.find('wlanuserip') == -1:
         print('log：获取到的url为：' + text)
         get_error(3)
-    ip_loc_list = [i.starjt() for i in re.finditer('ip=', text)]
+    ip_loc_list = [i.start() for i in re.finditer('ip=', text)]
     and_loc = text.find('&')
     wlanuserip = text[ip_loc_list[0] + 3:and_loc]
     basip = text[ip_loc_list[1] + 3:]
@@ -47,20 +38,19 @@ def get_ip():
 
 
 def get_captcha():
-    print('（2/4）尝试获取验证码...')
+    print('-----（2/4）尝试获取验证码-----')
     try:
         current_time = int(time.time() * 1000)
         captcha_url = 'http://114.247.41.55/bjps/login/captcha.html?t=%d' % (current_time)
         r = requests.Session()
         ss = r.get(captcha_url)
-        print(1111111111111111111111111)
-        print(ss.cookies)
+        # print(ss.cookies)
         JSESSIONID = ss.cookies['JSESSIONID']
         route = ss.cookies['route']
     except:
-        print('log：current_time:'+str(current_time)+' captcha_url:'+str(captcha_url)+' cookies:'+str(ss.cookies))
+        print('log：current_time:' + str(current_time) + ' captcha_url:' + str(captcha_url) + ' cookies:' + str(
+            ss.cookies))
         get_error(4)
-    #该这里的try了！！！
     with open("captcha.BMP", "wb") as f:
         f.write(ss.content)
     # 1
@@ -79,12 +69,15 @@ def get_captcha():
 
 
 def verify(wlanuserip, basip, captcha, JSESSIONID, route):
-    print('（3/4）尝试进行登录...')
-    with open("config.txt", 'r') as load_f:
-        line = load_f.readline()
-        load_dict = json.loads(line)
-    username = load_dict['username']
-    password = load_dict['password']
+    print('-----（3/4）尝试进行登录-----')
+    try:
+        with open("config.txt", 'r') as load_f:
+            line = load_f.readline()
+            load_dict = json.loads(line)
+        username = load_dict['username']
+        password = load_dict['password']
+    except:
+        get_error(5)
     url = "http://114.247.41.55/bjps/login/online.html"
     data = {
         "userName": username,
@@ -100,7 +93,8 @@ def verify(wlanuserip, basip, captcha, JSESSIONID, route):
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A",
     }
     res = requests.post(url, data=data, headers=headers).text
-    print(res)
+    res_dict = json.loads(res)
+    return res_dict
 
 
 def get_error(num):
@@ -115,11 +109,12 @@ def get_error(num):
 
 def error_dict(num):
     numbers = {
-        0: "zero",
-        1: "网络连接异常，检查网线是否插好/WiFi是否连接，请连接正常后重试。按回车键退出(ノ_<。)",
+        0: "检查网线是否插好/WiFi是否连接，请连接正常后重试。",
+        1: "网络连接异常，请尝试重启路由器后再试。按回车键退出(ノ_<。)",
         2: "网络已经正常连接~ 无需再次登录,按回车键退出( •̀ ω •́ )y",
         3: "无法获取ip地址，请重启路由器/重新连接光猫后重试。按回车键退出(ノ_<。)",
-        4: "获取验证码失败，请重启本程序再次尝试。按回车键退出(ノ_<。)"
+        4: "获取验证码失败，请重启本程序再次尝试。按回车键退出(ノ_<。)",
+        5: "获取本地账号密码失败，请检查config.txt中账号密码填写格式是否正确。按回车键退出(ノ_<。)"
     }
     return numbers.get(num, None)
 
@@ -127,6 +122,12 @@ def error_dict(num):
 if __name__ == '__main__':
     wlanuserip, basip = get_ip()
     print('获取ip成功！WlanUserIp为：%s，BasIp为：%s' % (wlanuserip, basip))
-    captcha, JSESSIONID, route = get_captcha()
-    print('获取验证码成功！captcha为：%s，JSessionID为：%s，route为：%s' % (captcha, JSESSIONID, route))
-    verify(wlanuserip, basip, captcha, JSESSIONID, route)
+    result = {'success': False}
+    count = 1
+    while result['success'] is False:
+        print('第' + str(count) + '次获取验证码，图片文件位于' + str(os.getcwd()) + '\captcha.BMP')
+        captcha, JSESSIONID, route = get_captcha()
+        result = verify(wlanuserip, basip, captcha, JSESSIONID, route)
+        count = count + 1
+        print(result['msg'])
+    input('网络已经正常连接~ 按回车键退出( •̀ ω •́ )y')
