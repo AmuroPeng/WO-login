@@ -130,4 +130,4 @@ if __name__ == '__main__':
         result = verify(wlanuserip, basip, captcha, JSESSIONID, route)
         count = count + 1
         print(result['msg'])
-    input('网络已经正常连接~ 按回车键退出((>w<)b')
+    input('网络已经正常连接~ 按回车键退出((>w<)')
