@@ -21,19 +21,20 @@ def get_ip():
     print('-----（1/4）尝试获取ip地址-----')
     url = 'http://www.msftconnecttest.com/redirect'
     try:
-        res = requests.get(url)
+        res = requests.get(url)  # 通过微软的跳转网址获取wlanuserip和baseip
     except:
         get_error(1)
     text = res.url
     if text.find('msn') != -1:  # 检测是否跳转至msn官网（判断网络是否连接正常）
         get_error(2)
-    if text.find('wlanuserip') == -1:
+    if text.find('wlanuserip') == -1:  # 将错误的跳转网址log出来
         print('log：获取到的url为：' + text)
         get_error(3)
-    ip_loc_list = [i.start() for i in re.finditer('ip=', text)]
+    ip_loc_list = [i.start() for i in re.finditer('ip=', text)]  # 将url中的get请求切割提取，顺便作为检验获取状态的标识
     and_loc = text.find('&')
     wlanuserip = text[ip_loc_list[0] + 3:and_loc]
     basip = text[ip_loc_list[1] + 3:]
+    print('获取ip成功！WlanUserIp为：%s，BaseIp为：%s' % (wlanuserip, basip))
     return wlanuserip, basip
 
 
@@ -41,20 +42,19 @@ def get_captcha():
     print('-----（2/4）尝试获取验证码-----')
     try:
         current_time = int(time.time() * 1000)
-        captcha_url = 'http://114.247.41.55/bjps/login/captcha.html?t=%d' % (current_time)
+        captcha_url = 'http://114.247.41.55/bjps/login/captcha.html?t=%d' % (current_time)  # 通过时间获取动态验证码
         r = requests.Session()
-        ss = r.get(captcha_url)
-        # print(ss.cookies)
+        ss = r.get(captcha_url)  # 获取cookie
         JSESSIONID = ss.cookies['JSESSIONID']
         route = ss.cookies['route']
     except:
         print('log：current_time:' + str(current_time) + ' captcha_url:' + str(captcha_url) + ' cookies:' + str(
             ss.cookies))
         get_error(4)
-    with open("captcha.BMP", "wb") as f:
+    with open("captcha.BMP", "wb") as f:  # 将抓到的验证码保存到本地
         f.write(ss.content)
     # 1
-    im = Image.open('captcha.BMP')
+    im = Image.open('captcha.BMP')  # 显示验证码
     im.show()
     #
     # 2
@@ -64,14 +64,13 @@ def get_captcha():
     # plt.show()
     #
     captcha = input('请输入验证码： ')
-    # readme里写下captcha.BMP的位置
     return captcha, JSESSIONID, route
 
 
 def verify(wlanuserip, basip, captcha, JSESSIONID, route):
     print('-----（3/4）尝试进行登录-----')
     try:
-        with open("config.txt", 'r') as load_f:
+        with open("config.txt", 'r') as load_f:  # 打开config文件，提取用户名和密码
             line = load_f.readline()
             load_dict = json.loads(line)
         username = load_dict['username']
@@ -86,25 +85,25 @@ def verify(wlanuserip, basip, captcha, JSESSIONID, route):
         "wlanuserip": wlanuserip,
         "basip": basip,
     }
-    headers = {
+    headers = {  # 将header伪装成是Safari的
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         "Cookie": "JSESSIONID=%s; route=%s; base=%s; on=0; basip=%s; wlan=%s; wlanuserip=%s" % (
             JSESSIONID, route, basip, basip, wlanuserip, wlanuserip),
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A",
     }
-    res = requests.post(url, data=data, headers=headers).text
-    res_dict = json.loads(res)
+    res = requests.post(url, data=data, headers=headers).text  # 获取post请求传回的字符串
+    res_dict = json.loads(res)  # 将json格式的字符串转化为dict
     return res_dict
 
 
 def get_error(num):
-    error_title = str(sys.exc_info()[0])
-    error_info = str(sys.exc_info())
+    error_title = str(sys.exc_info()[0])  # 获取报错标题
+    error_info = str(sys.exc_info())  # 获取具体错误信息
     print('发现错误：' + error_title)
     print('具体信息：' + error_info)
     error_info = error_dict(num)
     input('#####错误' + str(num).rjust(3, '0') + '：' + error_info)
-    sys.exit(0)
+    sys.exit(0)  # 退出
 
 
 def error_dict(num):
@@ -121,7 +120,6 @@ def error_dict(num):
 
 if __name__ == '__main__':
     wlanuserip, basip = get_ip()
-    print('获取ip成功！WlanUserIp为：%s，BasIp为：%s' % (wlanuserip, basip))
     result = {'success': False}
     count = 1
     while result['success'] is False:
