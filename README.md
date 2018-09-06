@@ -10,7 +10,7 @@ Windows，Mac
 双击沃校园破解器，等待输入验证码提示后，将验证码输入到命令行中，并点击回车  
 （文件大约250M左右，主要是因为加入了自动打开图片预览功能多占用了240M左右的空间）
 # 原理
-![联通网关](https://github.com/AmuroPeng/JuYouQu/blob/master/image/shop.png)  
+![联通网关](https://github.com/AmuroPeng/WO-login/blob/master/img/wo.png)  
 在HttpHeader中的User-Agent使用Mac Safari的标识（Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A）来登录
 # 参考
 https://www.cnblogs.com/A-FM/p/6802535.html
