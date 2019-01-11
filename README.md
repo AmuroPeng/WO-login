@@ -20,3 +20,5 @@ https://github.com/AmuroPeng/WO-login/releases/download/v1.0/WO-login.zip
 https://www.cnblogs.com/A-FM/p/6802535.html
 # 免责声明
 仅限于于学术交流，请于下载24小时后删除。产生的一切后果与本人无关，一切责任由您自己承担。
+# 学习笔记 
+http://www.amuro.top/?p=137
